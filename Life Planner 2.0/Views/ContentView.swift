@@ -105,11 +105,15 @@ struct HomeView: View {
                 .font(.headline)
             
             if let profile = dataManager.userProfile {
-                let progress = Double(profile.age) / Double(profile.expectedLifespan)
-                LifeProgressBar(progress: progress * 100)
+                let calculator = LifeCalculator(
+                    birthDate: profile.birthDate,
+                    currentDate: Date(),
+                    expectedLifespan: profile.expectedLifespan
+                )
+                LifeProgressBar(progress: calculator.progressPercentage)
                 
                 HStack {
-                    Text("\(profile.age)歲")
+                    Text("0歲")
                     Spacer()
                     Text("\(profile.expectedLifespan)歲")
                 }

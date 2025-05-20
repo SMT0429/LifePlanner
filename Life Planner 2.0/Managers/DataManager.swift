@@ -168,6 +168,7 @@ struct UserProfile: Codable {
     let id: UUID
     var name: String
     var age: Int
+    var birthDate: Date
     var gender: Gender
     var expectedLifespan: Int
     var dailyNecessaryTime: DailyTime
@@ -209,10 +210,11 @@ struct UserProfile: Codable {
         }
     }
     
-    init(id: UUID = UUID(), name: String, age: Int, gender: Gender, expectedLifespan: Int = 80, dailyNecessaryTime: DailyTime = DailyTime(), coreValues: [CoreValue] = [], lifeWheelAssessment: LifeWheelAssessment = LifeWheelAssessment(), goals: [Goal] = []) {
+    init(id: UUID = UUID(), name: String, age: Int, birthDate: Date = Date(), gender: Gender, expectedLifespan: Int = 80, dailyNecessaryTime: DailyTime = DailyTime(), coreValues: [CoreValue] = [], lifeWheelAssessment: LifeWheelAssessment = LifeWheelAssessment(), goals: [Goal] = []) {
         self.id = id
         self.name = name
         self.age = age
+        self.birthDate = birthDate
         self.gender = gender
         self.expectedLifespan = expectedLifespan
         self.dailyNecessaryTime = dailyNecessaryTime
@@ -239,9 +241,42 @@ class DataManager: ObservableObject {
     }
     
     private func loadData() {
-        if let profileData = userDefaults.data(forKey: profileKey),
-           let profile = try? JSONDecoder().decode(UserProfile.self, from: profileData) {
-            userProfile = profile
+        if let profileData = userDefaults.data(forKey: profileKey) {
+            // 嘗試用新結構解碼
+            if let profile = try? JSONDecoder().decode(UserProfile.self, from: profileData) {
+                userProfile = profile
+            } else {
+                // 嘗試用舊結構（沒有 birthDate）解碼
+                struct OldUserProfile: Codable {
+                    let id: UUID
+                    var name: String
+                    var age: Int
+                    var gender: UserProfile.Gender
+                    var expectedLifespan: Int
+                    var dailyNecessaryTime: UserProfile.DailyTime
+                    var coreValues: [CoreValue]
+                    var lifeWheelAssessment: LifeWheelAssessment
+                    var goals: [Goal]
+                }
+                if let oldProfile = try? JSONDecoder().decode(OldUserProfile.self, from: profileData) {
+                    // 用年齡推算一個大致的生日
+                    let birthDate = Calendar.current.date(byAdding: .year, value: -oldProfile.age, to: Date()) ?? Date()
+                    let newProfile = UserProfile(
+                        id: oldProfile.id,
+                        name: oldProfile.name,
+                        age: oldProfile.age,
+                        birthDate: birthDate,
+                        gender: oldProfile.gender,
+                        expectedLifespan: oldProfile.expectedLifespan,
+                        dailyNecessaryTime: oldProfile.dailyNecessaryTime,
+                        coreValues: oldProfile.coreValues,
+                        lifeWheelAssessment: oldProfile.lifeWheelAssessment,
+                        goals: oldProfile.goals
+                    )
+                    userProfile = newProfile
+                    saveData() // 立即升級資料
+                }
+            }
         }
         
         if let plansData = userDefaults.data(forKey: plansKey),

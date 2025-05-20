@@ -40,8 +40,10 @@ struct OdysseyPlanView: View {
                         plan: $tempNewPlan,
                         isNew: true
                     ) { plan in
-                        dataManager.addOdysseyPlan(plan)
-                        isPresentingNewPlan = false
+                        if isPresentingNewPlan {
+                            dataManager.addOdysseyPlan(plan)
+                            isPresentingNewPlan = false
+                        }
                     }
                 }
             }
@@ -106,7 +108,9 @@ struct PlanRow: View {
                 }) {
                     Image(systemName: "trash")
                         .foregroundColor(.red)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .padding(.vertical, 4)
@@ -184,7 +188,7 @@ struct PlanDetailView: View {
         updatedPlan.yearlyPlans = yearlyPlans
         
         if isNew {
-            dataManager.addOdysseyPlan(updatedPlan)
+            // 不再呼叫 dataManager.addOdysseyPlan，交由外部 onSave 處理
         } else {
             dataManager.updateOdysseyPlan(
                 updatedPlan,

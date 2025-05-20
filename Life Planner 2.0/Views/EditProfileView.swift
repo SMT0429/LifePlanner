@@ -7,12 +7,14 @@ struct EditProfileView: View {
     
     @State private var name: String
     @State private var age: Int
+    @State private var birthDate: Date
     @State private var gender: UserProfile.Gender
     
     init(profile: UserProfile) {
         self.profile = profile
         _name = State(initialValue: profile.name)
         _age = State(initialValue: profile.age)
+        _birthDate = State(initialValue: profile.birthDate)
         _gender = State(initialValue: profile.gender)
     }
     
@@ -23,6 +25,8 @@ struct EditProfileView: View {
                     TextField("姓名", text: $name)
                     
                     Stepper("年齡：\(age)歲", value: $age, in: 0...120)
+                    
+                    DatePicker("生日", selection: $birthDate, displayedComponents: .date)
                     
                     Picker("性別", selection: $gender) {
                         ForEach([UserProfile.Gender.male, .female, .other], id: \.self) { gender in
@@ -48,6 +52,7 @@ struct EditProfileView: View {
         var updatedProfile = profile
         updatedProfile.name = name
         updatedProfile.age = age
+        updatedProfile.birthDate = birthDate
         updatedProfile.gender = gender
         dataManager.updateProfile(updatedProfile)
     }
