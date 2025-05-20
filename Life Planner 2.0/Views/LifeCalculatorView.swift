@@ -85,21 +85,51 @@ struct LifeCalculatorView: View {
             VStack(spacing: 8) {
                 HStack {
                     Text("睡眠時間")
-                    Slider(value: $sleepHours, in: 4...12, step: 0.5)
+                    Slider(
+                        value: Binding(
+                            get: { sleepHours },
+                            set: { newValue in
+                                let maxValue = min(12, 24 - commuteHours - workHours)
+                                sleepHours = min(newValue, maxValue)
+                            }
+                        ),
+                        in: 4...min(12, 24 - commuteHours - workHours),
+                        step: 0.5
+                    )
                     Text("\(sleepHours, specifier: "%.1f")小時")
                         .frame(width: 60)
                 }
                 
                 HStack {
                     Text("通勤時間")
-                    Slider(value: $commuteHours, in: 0...6, step: 0.5)
+                    Slider(
+                        value: Binding(
+                            get: { commuteHours },
+                            set: { newValue in
+                                let maxValue = min(6, 24 - sleepHours - workHours)
+                                commuteHours = min(newValue, maxValue)
+                            }
+                        ),
+                        in: 0...min(6, 24 - sleepHours - workHours),
+                        step: 0.5
+                    )
                     Text("\(commuteHours, specifier: "%.1f")小時")
                         .frame(width: 60)
                 }
                 
                 HStack {
                     Text("工作時間")
-                    Slider(value: $workHours, in: 0...16, step: 0.5)
+                    Slider(
+                        value: Binding(
+                            get: { workHours },
+                            set: { newValue in
+                                let maxValue = min(16, 24 - sleepHours - commuteHours)
+                                workHours = min(newValue, maxValue)
+                            }
+                        ),
+                        in: 0...min(16, 24 - sleepHours - commuteHours),
+                        step: 0.5
+                    )
                     Text("\(workHours, specifier: "%.1f")小時")
                         .frame(width: 60)
                 }
@@ -191,11 +221,42 @@ struct LifeCalculatorView: View {
     }
     
     private var calendarSection: some View {
-        WeekCalendarWithTime(
-            totalWeeks: calculator.totalWeeks,
-            livedWeeks: calculator.livedWeeks,
-            disposableHoursPerDay: calculator.dailyTime.disposableTime
-        )
+        VStack(alignment: .leading, spacing: 12) {
+            // 顯示剩餘可支配時間
+            Text("剩餘可支配時間：\(Int(calculator.remainingDisposableTime))小時 ≈ \(Int(calculator.remainingDisposableTime / 24))天")
+                .font(.headline)
+                .foregroundColor(.green)
+            
+            // 生命日曆圖
+            WeekCalendarWithTime(
+                totalWeeks: calculator.totalWeeks,
+                livedWeeks: calculator.livedWeeks,
+                disposableHoursPerDay: calculator.dailyTime.disposableTime
+            )
+            
+            // 圖例
+            HStack(spacing: 16) {
+                HStack(spacing: 4) {
+                    Rectangle()
+                        .fill(Color.blue)
+                        .frame(width: 16, height: 16)
+                    Text("已經活過的週數")
+                        .font(.caption)
+                }
+                HStack(spacing: 4) {
+                    Rectangle()
+                        .fill(Color.green.opacity(0.3))
+                        .frame(width: 16, height: 16)
+                    Text("剩餘可支配週數")
+                        .font(.caption)
+                }
+            }
+            .padding(.top, 4)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(radius: 1)
     }
 }
 

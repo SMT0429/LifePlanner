@@ -175,17 +175,7 @@ struct WeekCalendarWithTime: View {
                 let remainingWeeks = totalWeeks - livedWeeks
                 let remainingDisposableHours = Double(remainingWeeks) * 7 * disposableHoursPerDay
                 
-                Text("剩餘可支配時間")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Text("\(Int(remainingDisposableHours))小時")
-                        .font(.headline)
-                    Text("≈ \(Int(remainingDisposableHours / 24))天")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+
                 
                 Text("每週可支配：\(Int(disposableHoursPerDay * 7))小時")
                     .font(.caption)

@@ -218,7 +218,9 @@ struct LifeWheelView: View {
         guard var profile = dataManager.userProfile else { return }
         var scores = profile.lifeWheelAssessment.scores
         scores[area] = score
-        profile.lifeWheelAssessment = LifeWheelAssessment(scores: scores)
+        var newAssessment = LifeWheelAssessment(scores: scores)
+        newAssessment.goals = profile.lifeWheelAssessment.goals
+        profile.lifeWheelAssessment = newAssessment
         dataManager.updateProfile(profile)
     }
     

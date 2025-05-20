@@ -187,12 +187,26 @@ struct CategoryDropZone: View {
     @EnvironmentObject private var dataManager: DataManager
     let category: ValueCard.Category
     let prompt: String
+    @State private var isDropTarget = false
+    
+    private var zoneColor: Color {
+        switch category {
+        case .important:
+            return .green
+        case .neutral:
+            return .yellow
+        case .unimportant:
+            return .red
+        default:
+            return Color(category.color)
+        }
+    }
     
     var body: some View {
         VStack {
             Text(category.rawValue)
                 .font(.headline)
-                .foregroundColor(Color(category.color))
+                .foregroundColor(zoneColor)
             
             Spacer()
             
@@ -204,36 +218,42 @@ struct CategoryDropZone: View {
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .background(Color(category.color).opacity(0.1))
+        .background(
+            zoneColor.opacity(isDropTarget ? 0.38 : 0.22)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(Color(category.color), lineWidth: 2)
+                .stroke(zoneColor, lineWidth: 2)
         )
-        .onDrop(of: [.text], delegate: CategoryDropDelegate(category: category, dataManager: dataManager))
+        .cornerRadius(10)
+        .onDrop(of: [.text], delegate: CategoryDropDelegateWithHighlight(category: category, dataManager: dataManager, isDropTarget: $isDropTarget))
     }
 }
 
-struct CategoryDropDelegate: DropDelegate {
+struct CategoryDropDelegateWithHighlight: DropDelegate {
     let category: ValueCard.Category
     let dataManager: DataManager
+    @Binding var isDropTarget: Bool
     
     func performDrop(info: DropInfo) -> Bool {
+        isDropTarget = false
         guard let itemProvider = info.itemProviders(for: [.text]).first else { return false }
-        
         itemProvider.loadObject(ofClass: NSString.self) { string, error in
             guard let uuidString = string as? String,
                   let uuid = UUID(uuidString: uuidString) else { return }
-            
             DispatchQueue.main.async {
                 dataManager.updateCardCategory(uuid, to: category)
             }
         }
-        
         return true
     }
     
     func dropEntered(info: DropInfo) {
-        // 可以在這裡添加拖拽進入時的視覺效果
+        isDropTarget = true
+    }
+    
+    func dropExited(info: DropInfo) {
+        isDropTarget = false
     }
     
     func dropUpdated(info: DropInfo) -> DropProposal? {

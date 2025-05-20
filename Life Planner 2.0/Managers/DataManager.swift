@@ -258,6 +258,8 @@ class DataManager: ObservableObject {
         
         if let plansData = try? JSONEncoder().encode(odysseyPlans) {
             userDefaults.set(plansData, forKey: plansKey)
+            userDefaults.synchronize()
+            objectWillChange.send()
         }
     }
     
@@ -348,8 +350,10 @@ class DataManager: ObservableObject {
     // MARK: - Odyssey Plan Management
     
     func addOdysseyPlan(_ plan: OdysseyPlan) {
+        print("新增計畫：", plan.title)
         odysseyPlans.append(plan)
-        saveOdysseyPlans()
+        saveData()
+        objectWillChange.send()
     }
     
     func updateOdysseyPlan(_ plan: OdysseyPlan, title: String, description: String, yearlyPlans: [YearlyPlan]) {
@@ -359,7 +363,18 @@ class DataManager: ObservableObject {
             updatedPlan.description = description
             updatedPlan.yearlyPlans = yearlyPlans
             odysseyPlans[index] = updatedPlan
-            saveOdysseyPlans()
+            saveData()
+            objectWillChange.send()
+            
+            // 打印调试信息
+            print("更新计划：", updatedPlan.title)
+            print("年度计划数量：", updatedPlan.yearlyPlans.count)
+            for (index, yearlyPlan) in updatedPlan.yearlyPlans.enumerated() {
+                print("第\(index + 1)年：")
+                print("- 目标数量：", yearlyPlan.goals.count)
+                print("- 里程碑数量：", yearlyPlan.milestones.count)
+                print("- 行动数量：", yearlyPlan.actions.count)
+            }
         }
     }
     
@@ -374,25 +389,22 @@ class DataManager: ObservableObject {
             updatedPlan.history.append(history)
             updatedPlan.scores = scores
             odysseyPlans[index] = updatedPlan
-            saveOdysseyPlans()
+            saveData()
+            objectWillChange.send()
         }
     }
     
     func deleteOdysseyPlan(_ planId: UUID) {
         odysseyPlans.removeAll { $0.id == planId }
-        saveOdysseyPlans()
+        saveData()
+        objectWillChange.send()
     }
     
-    private func saveOdysseyPlans() {
-        if let encoded = try? JSONEncoder().encode(odysseyPlans) {
-            UserDefaults.standard.set(encoded, forKey: "odysseyPlans")
-        }
-    }
-    
-    private func loadOdysseyPlans() {
-        if let data = UserDefaults.standard.data(forKey: "odysseyPlans"),
+    func loadOdysseyPlans() {
+        if let data = UserDefaults.standard.data(forKey: plansKey),
            let decoded = try? JSONDecoder().decode([OdysseyPlan].self, from: data) {
             odysseyPlans = decoded
+            objectWillChange.send()
         }
     }
     

@@ -4,39 +4,66 @@ import Charts
 // MARK: - Main View
 struct OdysseyPlanView: View {
     @EnvironmentObject private var dataManager: DataManager
-    @State private var showingNewPlanSheet = false
-    @State private var selectedPlan: OdysseyPlan?
-    @State private var showingScoreSheet = false
+    @State private var editingPlanIndex: IntIdentifiable? = nil
+    @State private var isPresentingNewPlan = false
+    @State private var tempNewPlan = OdysseyPlan(title: "", description: "")
     
     var body: some View {
         NavigationView {
             List {
-                ForEach(dataManager.odysseyPlans) { plan in
-                    PlanRow(plan: plan)
+                ForEach(dataManager.odysseyPlans.indices, id: \.self) { idx in
+                    PlanRow(plan: dataManager.odysseyPlans[idx])
                         .onTapGesture {
-                            selectedPlan = plan
+                            editingPlanIndex = IntIdentifiable(value: idx)
                         }
+                }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        dataManager.deleteOdysseyPlan(dataManager.odysseyPlans[index].id)
+                    }
                 }
             }
             .navigationTitle("奧德賽計畫")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        showingNewPlanSheet = true
+                        tempNewPlan = OdysseyPlan(title: "", description: "")
+                        isPresentingNewPlan = true
                     }) {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showingNewPlanSheet) {
+            .sheet(isPresented: $isPresentingNewPlan) {
                 NavigationView {
-                    PlanDetailView(plan: nil)
+                    PlanDetailView(
+                        plan: $tempNewPlan,
+                        isNew: true
+                    ) { plan in
+                        dataManager.addOdysseyPlan(plan)
+                        isPresentingNewPlan = false
+                    }
                 }
             }
-            .sheet(item: $selectedPlan) { plan in
+            .sheet(item: $editingPlanIndex) { idxIdentifiable in
+                let idx = idxIdentifiable.value
                 NavigationView {
-                    PlanDetailView(plan: plan)
+                    PlanDetailView(
+                        plan: $dataManager.odysseyPlans[idx],
+                        isNew: false
+                    ) { plan in
+                        dataManager.updateOdysseyPlan(
+                            plan,
+                            title: plan.title,
+                            description: plan.description,
+                            yearlyPlans: plan.yearlyPlans
+                        )
+                        editingPlanIndex = nil
+                    }
                 }
+            }
+            .onAppear {
+                dataManager.loadOdysseyPlans()
             }
         }
     }
@@ -73,38 +100,45 @@ struct PlanRow: View {
 
 // MARK: - Plan Detail View
 struct PlanDetailView: View {
+    @Binding var plan: OdysseyPlan
+    var isNew: Bool
+    var onSave: (OdysseyPlan) -> Void
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var dataManager: DataManager
-    let plan: OdysseyPlan?
-    
     @State private var title: String
     @State private var description: String
+    @State private var yearlyPlans: [YearlyPlan]
     @State private var selectedYearIndex = 0
     @State private var newGoal = ""
     @State private var newMilestone = ""
     @State private var newAction = ""
     @State private var showingScoreSheet = false
     @State private var showingHistorySheet = false
-    
-    init(plan: OdysseyPlan?) {
-        self.plan = plan
-        _title = State(initialValue: plan?.title ?? "")
-        _description = State(initialValue: plan?.description ?? "")
+
+    init(plan: Binding<OdysseyPlan>, isNew: Bool, onSave: @escaping (OdysseyPlan) -> Void) {
+        self._plan = plan
+        self.isNew = isNew
+        self.onSave = onSave
+        _title = State(initialValue: plan.wrappedValue.title)
+        _description = State(initialValue: plan.wrappedValue.description)
+        _yearlyPlans = State(initialValue: plan.wrappedValue.yearlyPlans)
     }
-    
+
     var body: some View {
         Form {
-            basicInfoSection
+            Section(header: Text("基本資訊")) {
+                TextField("標題", text: $title)
+                TextEditor(text: $description)
+            }
             yearlyPlanSection
             actionButtons
         }
-        .navigationTitle(plan == nil ? "新建計畫" : "編輯計畫")
+        .navigationTitle(isNew ? "新建計畫" : "編輯計畫")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button("取消") {
-                    dismiss()
-                }
+                Button("取消") { dismiss() }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("保存") {
@@ -113,23 +147,32 @@ struct PlanDetailView: View {
             }
         }
         .sheet(isPresented: $showingScoreSheet) {
-            if let plan = plan {
-                PlanScoreView(plan: plan)
-            }
+            PlanScoreView(plan: plan)
         }
         .sheet(isPresented: $showingHistorySheet) {
-            if let plan = plan {
-                PlanHistoryView(plan: plan)
-            }
+            PlanHistoryView(plan: plan)
         }
     }
     
-    private var basicInfoSection: some View {
-        Section(header: Text("基本資訊")) {
-            TextField("標題", text: $title)
-            TextEditor(text: $description)
-                .frame(height: 100)
+    private func savePlan() {
+        var updatedPlan = plan
+        updatedPlan.title = title
+        updatedPlan.description = description
+        updatedPlan.yearlyPlans = yearlyPlans
+        
+        if isNew {
+            dataManager.addOdysseyPlan(updatedPlan)
+        } else {
+            dataManager.updateOdysseyPlan(
+                updatedPlan,
+                title: updatedPlan.title,
+                description: updatedPlan.description,
+                yearlyPlans: updatedPlan.yearlyPlans
+            )
         }
+        
+        onSave(updatedPlan)
+        dismiss()
     }
     
     private var yearlyPlanSection: some View {
@@ -148,6 +191,9 @@ struct PlanDetailView: View {
             }
         }
         .pickerStyle(.segmented)
+        .onChange(of: selectedYearIndex) { _ in
+            savePlan()
+        }
     }
     
     private var goalsSection: some View {
@@ -155,7 +201,7 @@ struct PlanDetailView: View {
             Text("目標")
                 .font(.headline)
             
-            ForEach(currentYearlyPlan.goals) { goal in
+            ForEach(yearlyPlans[selectedYearIndex].goals) { goal in
                 Text("• \(goal.content)")
                     .font(.subheadline)
             }
@@ -179,7 +225,7 @@ struct PlanDetailView: View {
             Text("里程碑")
                 .font(.headline)
             
-            ForEach(currentYearlyPlan.milestones) { milestone in
+            ForEach(yearlyPlans[selectedYearIndex].milestones) { milestone in
                 Text("• \(milestone.content)")
                     .font(.subheadline)
             }
@@ -203,7 +249,7 @@ struct PlanDetailView: View {
             Text("具體行動")
                 .font(.headline)
             
-            ForEach(currentYearlyPlan.actions) { action in
+            ForEach(yearlyPlans[selectedYearIndex].actions) { action in
                 Text("• \(action.content)")
                     .font(.subheadline)
             }
@@ -224,7 +270,7 @@ struct PlanDetailView: View {
     
     private var actionButtons: some View {
         Section {
-            if let plan = plan {
+            if !isNew {
                 Button("評分計畫") {
                     showingScoreSheet = true
                 }
@@ -236,62 +282,25 @@ struct PlanDetailView: View {
         }
     }
     
-    private var currentYearlyPlan: YearlyPlan {
-        plan?.yearlyPlans[selectedYearIndex] ?? YearlyPlan()
-    }
-    
     private func addGoal() {
         let newPlanItem = PlanItem(content: newGoal)
-        var updatedYearlyPlan = currentYearlyPlan
-        updatedYearlyPlan.goals.append(newPlanItem)
-        updateYearlyPlan(updatedYearlyPlan)
+        yearlyPlans[selectedYearIndex].goals.append(newPlanItem)
         newGoal = ""
+        savePlan()
     }
     
     private func addMilestone() {
         let newPlanItem = PlanItem(content: newMilestone)
-        var updatedYearlyPlan = currentYearlyPlan
-        updatedYearlyPlan.milestones.append(newPlanItem)
-        updateYearlyPlan(updatedYearlyPlan)
+        yearlyPlans[selectedYearIndex].milestones.append(newPlanItem)
         newMilestone = ""
+        savePlan()
     }
     
     private func addAction() {
         let newPlanItem = PlanItem(content: newAction)
-        var updatedYearlyPlan = currentYearlyPlan
-        updatedYearlyPlan.actions.append(newPlanItem)
-        updateYearlyPlan(updatedYearlyPlan)
+        yearlyPlans[selectedYearIndex].actions.append(newPlanItem)
         newAction = ""
-    }
-    
-    private func updateYearlyPlan(_ updatedPlan: YearlyPlan) {
-        guard let existingPlan = plan else { return }
-        var updatedYearlyPlans = existingPlan.yearlyPlans
-        updatedYearlyPlans[selectedYearIndex] = updatedPlan
-        dataManager.updateOdysseyPlan(
-            existingPlan,
-            title: title,
-            description: description,
-            yearlyPlans: updatedYearlyPlans
-        )
-    }
-    
-    private func savePlan() {
-        if let existingPlan = plan {
-            dataManager.updateOdysseyPlan(
-                existingPlan,
-                title: title,
-                description: description,
-                yearlyPlans: existingPlan.yearlyPlans
-            )
-        } else {
-            let newPlan = OdysseyPlan(
-                title: title,
-                description: description
-            )
-            dataManager.addOdysseyPlan(newPlan)
-        }
-        dismiss()
+        savePlan()
     }
 }
 
@@ -462,6 +471,11 @@ struct PlanScoreView: View {
                 .frame(height: 100)
         }
     }
+}
+
+struct IntIdentifiable: Identifiable {
+    let value: Int
+    var id: Int { value }
 }
 
 #Preview {
