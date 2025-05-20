@@ -11,6 +11,7 @@ struct OdysseyPlan: Identifiable, Codable {
     var resources: [String]
     var risks: [String]
     var history: [PlanHistory]
+    var currentNotes: String
     
     var progressPercentage: Double {
         let totalWeeks = 5 * 52 // 5年
@@ -36,7 +37,8 @@ struct OdysseyPlan: Identifiable, Codable {
         challenges: [String] = [],
         resources: [String] = [],
         risks: [String] = [],
-        history: [PlanHistory] = []
+        history: [PlanHistory] = [],
+        currentNotes: String = ""
     ) {
         self.id = id
         self.title = title
@@ -48,6 +50,7 @@ struct OdysseyPlan: Identifiable, Codable {
         self.resources = resources
         self.risks = risks
         self.history = history
+        self.currentNotes = currentNotes
     }
 }
 

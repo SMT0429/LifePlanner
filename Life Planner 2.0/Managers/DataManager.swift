@@ -394,6 +394,25 @@ class DataManager: ObservableObject {
         }
     }
     
+    // 新增：同時更新 scores、notes、questions
+    func updateOdysseyPlanScoreAndQuestions(_ planId: UUID, scores: PlanScores, notes: String, questions: [String]) {
+        if let index = odysseyPlans.firstIndex(where: { $0.id == planId }) {
+            var updatedPlan = odysseyPlans[index]
+            let history = PlanHistory(
+                date: Date(),
+                scores: scores,
+                notes: notes
+            )
+            updatedPlan.history.append(history)
+            updatedPlan.scores = scores
+            updatedPlan.questions = questions
+            updatedPlan.currentNotes = notes
+            odysseyPlans[index] = updatedPlan
+            saveData()
+            objectWillChange.send()
+        }
+    }
+    
     func deleteOdysseyPlan(_ planId: UUID) {
         odysseyPlans.removeAll { $0.id == planId }
         saveData()

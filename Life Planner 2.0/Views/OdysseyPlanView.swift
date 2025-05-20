@@ -71,30 +71,53 @@ struct OdysseyPlanView: View {
 
 struct PlanRow: View {
     let plan: OdysseyPlan
+    @EnvironmentObject private var dataManager: DataManager
+    @State private var showingDeleteAlert = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(plan.title)
-                .font(.headline)
-            
-            Text(plan.description)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .lineLimit(2)
-            
             HStack {
-                Text("進度：\(Int(plan.progressPercentage))%")
-                    .font(.caption)
-                    .foregroundColor(.blue)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(plan.title)
+                        .font(.headline)
+                    
+                    Text(plan.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                    
+                    HStack {
+                        Text("進度：\(Int(plan.progressPercentage))%")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        
+                        Spacer()
+                        
+                        Text("\(plan.livedWeeks)/\(plan.totalWeeks)週")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 
                 Spacer()
                 
-                Text("\(plan.livedWeeks)/\(plan.totalWeeks)週")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Button(action: {
+                    showingDeleteAlert = true
+                }) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
             }
         }
         .padding(.vertical, 4)
+        .alert("確定要刪除這個計劃嗎？", isPresented: $showingDeleteAlert) {
+            Button("取消", role: .cancel) { }
+            Button("刪除", role: .destructive) {
+                dataManager.deleteOdysseyPlan(plan.id)
+            }
+        } message: {
+            Text("刪除後將無法恢復")
+        }
     }
 }
 
@@ -191,9 +214,6 @@ struct PlanDetailView: View {
             }
         }
         .pickerStyle(.segmented)
-        .onChange(of: selectedYearIndex) { _ in
-            savePlan()
-        }
     }
     
     private var goalsSection: some View {
@@ -286,21 +306,18 @@ struct PlanDetailView: View {
         let newPlanItem = PlanItem(content: newGoal)
         yearlyPlans[selectedYearIndex].goals.append(newPlanItem)
         newGoal = ""
-        savePlan()
     }
     
     private func addMilestone() {
         let newPlanItem = PlanItem(content: newMilestone)
         yearlyPlans[selectedYearIndex].milestones.append(newPlanItem)
         newMilestone = ""
-        savePlan()
     }
     
     private func addAction() {
         let newPlanItem = PlanItem(content: newAction)
         yearlyPlans[selectedYearIndex].actions.append(newPlanItem)
         newAction = ""
-        savePlan()
     }
 }
 
@@ -388,6 +405,7 @@ struct PlanScoreView: View {
         self.plan = plan
         _scores = State(initialValue: plan.scores)
         _questions = State(initialValue: plan.questions)
+        _notes = State(initialValue: plan.currentNotes)
     }
     
     var body: some View {
@@ -401,7 +419,7 @@ struct PlanScoreView: View {
             .navigationBarItems(
                 leading: Button("取消") { dismiss() },
                 trailing: Button("保存") {
-                    dataManager.updateOdysseyPlanScore(plan.id, scores: scores, notes: notes)
+                    dataManager.updateOdysseyPlanScoreAndQuestions(plan.id, scores: scores, notes: notes, questions: questions)
                     dismiss()
                 }
             )
