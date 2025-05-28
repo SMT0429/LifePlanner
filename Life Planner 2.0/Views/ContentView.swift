@@ -52,11 +52,8 @@ struct HomeView: View {
                     // 歡迎區域
                     welcomeSection
                     
-                    // 生命進度概覽
-                    lifeProgressSection
-                    
                     // 今日時間分配
-                    dailyTimeSection
+                    // dailyTimeSection
                     
                     // 快速操作區
                     quickActionsSection
@@ -99,70 +96,7 @@ struct HomeView: View {
         .shadow(radius: 1)
     }
     
-    private var lifeProgressSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("生命進度")
-                .font(.headline)
-            
-            if let profile = dataManager.userProfile {
-                let calculator = LifeCalculator(
-                    birthDate: profile.birthDate,
-                    currentDate: Date(),
-                    expectedLifespan: profile.expectedLifespan
-                )
-                LifeProgressBar(progress: calculator.progressPercentage)
-                
-                HStack {
-                    Text("0歲")
-                    Spacer()
-                    Text("\(profile.expectedLifespan)歲")
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-            } else {
-                Text("請先設定個人資料")
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(10)
-        .shadow(radius: 1)
-    }
-    
-    private var dailyTimeSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("今日時間分配")
-                .font(.headline)
-            
-            if let profile = dataManager.userProfile {
-                let dailyTime = profile.dailyNecessaryTime
-                let totalHours = dailyTime.sleep + dailyTime.work + dailyTime.commute + dailyTime.meals + dailyTime.other
-                let remainingHours = 24 - totalHours
-                
-                DisposableTimeChart(
-                    totalHours: 24,
-                    disposableHours: remainingHours
-                )
-                
-                HStack {
-                    Text("剩餘可支配時間：\(Int(remainingHours))小時")
-                        .foregroundColor(.green)
-                    Spacer()
-                    Button("調整") {
-                        showingDailyTimeSheet = true
-                    }
-                }
-            } else {
-                Text("請先設定每日時間分配")
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(10)
-        .shadow(radius: 1)
-    }
+ 
     
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
