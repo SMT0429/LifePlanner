@@ -23,25 +23,25 @@ struct WelcomeView: View {
                     .padding(.horizontal)
                 
                 VStack(alignment: .leading, spacing: 20) {
-                    FeatureRow(
+                    CommonViews.FeatureRow(
                         icon: "circle.grid.cross.fill",
                         title: "生命之輪",
                         description: "評估你目前的生活平衡"
                     )
                     
-                    FeatureRow(
+                    CommonViews.FeatureRow(
                         icon: "target",
                         title: "目標設定",
                         description: "設定具體可行的目標"
                     )
                     
-                    FeatureRow(
+                    CommonViews.FeatureRow(
                         icon: "calendar",
                         title: "每週行動",
                         description: "將目標分解為可執行的行動"
                     )
                     
-                    FeatureRow(
+                    CommonViews.FeatureRow(
                         icon: "chart.bar.fill",
                         title: "進度追蹤",
                         description: "追蹤目標完成情況"
@@ -69,29 +69,6 @@ struct WelcomeView: View {
             .navigationBarHidden(true)
             .fullScreenCover(isPresented: $showingMainTab) {
                 MainTabView()
-            }
-        }
-    }
-}
-
-struct FeatureRow: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(spacing: 15) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(.blue)
-                .frame(width: 30)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
             }
         }
     }

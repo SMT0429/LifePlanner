@@ -99,9 +99,15 @@ struct CoreValuesView: View {
             Text("價值觀卡片篩選遊戲")
                 .font(.headline)
             
-            Text("第一階段：將100張卡片分類到「重要」、「普通」、「不重要」三個區域")
+            Text("第一階段：將20張卡片分類到「重要」、「普通」、「不重要」三個區域")
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
             Text("第二階段：從「重要」類別中，選出5-10張最重要的核心價值觀")
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
             Text("最終階段：檢視你的核心價值觀，作為生活決策的指南")
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
             
             Button("開始篩選") {
                 showingGuide = false

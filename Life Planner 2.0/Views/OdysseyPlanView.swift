@@ -1,16 +1,119 @@
 import SwiftUI
 import Charts
 
+// MARK: - Guide Row
+struct GuideRow: View {
+    let number: String
+    let text: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(number)
+                .font(.subheadline)
+                .foregroundColor(.white)
+                .frame(width: 24, height: 24)
+                .background(Circle().fill(Color.blue))
+            
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - Score Row
+struct ScoreRow: View {
+    let title: String
+    let description: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+            Text(description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
 // MARK: - Main View
 struct OdysseyPlanView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var editingPlanIndex: IntIdentifiable? = nil
     @State private var isPresentingNewPlan = false
     @State private var tempNewPlan = OdysseyPlan(title: "", description: "")
+    @State private var isShowingIntro = true
     
     var body: some View {
         NavigationView {
             List {
+                // 介紹區塊
+                Section {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // 標題
+                        HStack {
+                            Text("奧德賽介紹")
+                                .font(.title2)
+                                .bold()
+                            Spacer()
+                            Button(action: {
+                                withAnimation {
+                                    isShowingIntro.toggle()
+                                }
+                            }) {
+                                Image(systemName: isShowingIntro ? "chevron.up" : "chevron.down")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        
+                        if isShowingIntro {
+                            // 核心概念
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("核心概念")
+                                    .font(.headline)
+                                    .foregroundColor(.blue)
+                                
+                                Text("奧德賽計劃是一個長期規劃工具，幫助你設計並探索不同的人生藍圖。透過設定目標、里程碑和具體行動，讓你的夢想逐步實現。")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // 使用指南
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("使用指南")
+                                    .font(.headline)
+                                    .foregroundColor(.blue)
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    GuideRow(number: "1", text: "點擊右上角「+」新增計劃")
+                                    GuideRow(number: "2", text: "設定不同生命藍圖的內容")
+                                    GuideRow(number: "3", text: "定期評分並追蹤進度")
+                                    GuideRow(number: "4", text: "查看歷史記錄，了解成長軌跡")
+                                }
+                            }
+                            
+                            // 五大指標說明
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("五大評分指標")
+                                    .font(.headline)
+                                    .foregroundColor(.blue)
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ScoreRow(title: "資源", description: "所需資源的充足程度")
+                                    ScoreRow(title: "喜歡", description: "對計劃的熱情程度")
+                                    ScoreRow(title: "自信", description: "實現計劃的信心程度")
+                                    ScoreRow(title: "一致", description: "與價值觀的契合程度")
+                                    ScoreRow(title: "疑問", description: "需要解決的問題數量")
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // 原有的計劃列表
                 ForEach(dataManager.odysseyPlans.indices, id: \.self) { idx in
                     PlanRow(plan: dataManager.odysseyPlans[idx])
                         .onTapGesture {

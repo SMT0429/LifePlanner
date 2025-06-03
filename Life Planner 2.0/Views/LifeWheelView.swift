@@ -5,6 +5,7 @@ struct LifeWheelView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var selectedArea: String?
     @State private var newGoal = ""
+    @State private var isShowingIntro = true
     
     private let areas = [
         "健康", "事業", "家庭", "財務",
@@ -14,6 +15,9 @@ struct LifeWheelView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // 介紹區塊
+                introSection
+                
                 if let profile = dataManager.userProfile {
                     radarChart(scores: profile.lifeWheelAssessment.scores)
                         .frame(height: 300)
@@ -28,6 +32,114 @@ struct LifeWheelView: View {
             }
             .padding()
         }
+    }
+    
+    private var introSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // 標題
+            HStack {
+                Text("生命之輪")
+                    .font(.title2)
+                    .bold()
+                Spacer()
+                Button(action: {
+                    withAnimation {
+                        isShowingIntro.toggle()
+                    }
+                }) {
+                    Image(systemName: isShowingIntro ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.gray)
+                }
+            }
+            
+            if isShowingIntro {
+                // 核心概念
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("核心概念")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    
+                    Text("生命之輪是一個視覺化工具，幫助你評估生活八大領域的滿意度，找出需要改善的方向。")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                // 使用方式
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("使用方式")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        CommonViews.TipRow(number: "1", text: "拖動雷達圖上的點或使用滑桿來評分（0-10分）")
+                        CommonViews.TipRow(number: "2", text: "點擊目標按鈕為低分領域設定改善目標")
+                        CommonViews.TipRow(number: "3", text: "定期更新評分，追蹤改善進度")
+                        CommonViews.TipRow(number: "4", text: "完成目標後標記，持續優化生活品質")
+                    }
+                }
+                
+                // 八大領域說明
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("八大領域")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        CommonViews.FeatureRow(
+                            icon: "heart.fill",
+                            title: "健康",
+                            description: "身體健康、運動習慣、飲食習慣"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "briefcase.fill",
+                            title: "事業",
+                            description: "工作發展、職業規劃、專業技能"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "house.fill",
+                            title: "家庭",
+                            description: "家庭關係、親子互動、生活品質"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "dollarsign.circle.fill",
+                            title: "財務",
+                            description: "收入支出、理財規劃、財務目標"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "book.fill",
+                            title: "學習",
+                            description: "知識獲取、技能提升、個人成長"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "person.2.fill",
+                            title: "社交",
+                            description: "人際關係、社交活動、溝通能力"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "gamecontroller.fill",
+                            title: "休閒",
+                            description: "興趣愛好、娛樂活動、生活樂趣"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "sparkles",
+                            title: "心靈",
+                            description: "精神層面、價值觀、人生意義"
+                        )
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(radius: 1)
     }
     
     private func radarChart(scores: [String: Double]) -> some View {

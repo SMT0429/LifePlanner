@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var dataManager = DataManager()
     @State private var selectedTab = 0
+    @State private var isShowingIntro = true
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -44,6 +45,7 @@ struct HomeView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var showingDailyTimeSheet = false
     @State private var showingLifespanSheet = false
+    @State private var isShowingIntro = true
     
     var body: some View {
         NavigationView {
@@ -55,8 +57,13 @@ struct HomeView: View {
                     // 今日時間分配
                     // dailyTimeSection
                     
+                    // 應用介紹區
+                    appIntroSection
+                    
                     // 快速操作區
                     quickActionsSection
+                    
+
                 }
                 .padding()
             }
@@ -95,8 +102,6 @@ struct HomeView: View {
         .cornerRadius(10)
         .shadow(radius: 1)
     }
-    
- 
     
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -160,6 +165,79 @@ struct HomeView: View {
         .cornerRadius(10)
         .shadow(radius: 1)
     }
+    
+    private var appIntroSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // 標題
+            HStack {
+                Text("生命規劃師")
+                    .font(.title2)
+                    .bold()
+                Spacer()
+                Button(action: {
+                    withAnimation {
+                        isShowingIntro.toggle()
+                    }
+                }) {
+                    Image(systemName: isShowingIntro ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.gray)
+                }
+            }
+            
+            if isShowingIntro {
+                // 核心功能介紹
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("核心功能")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        CommonViews.FeatureRow(
+                            icon: "circle.grid.cross.fill",
+                            title: "生命之輪",
+                            description: "評估生活各面向的滿意度，找出需要改善的領域"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "heart.fill",
+                            title: "價值觀",
+                            description: "探索並確立個人核心價值觀，指引人生方向"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "map.fill",
+                            title: "奧德賽計劃",
+                            description: "規劃5年人生藍圖，設定目標、里程碑和具體行動"
+                        )
+                        
+                        CommonViews.FeatureRow(
+                            icon: "clock.fill",
+                            title: "壽命計算",
+                            description: "計算生命時間，了解可支配時間，善用每分每秒"
+                        )
+                    }
+                }
+                
+                // 使用建議
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("使用建議")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        CommonViews.TipRow(number: "1", text: "先完成生命之輪評估，了解現況")
+                        CommonViews.TipRow(number: "2", text: "確立核心價值觀，作為決策依據")
+                        CommonViews.TipRow(number: "3", text: "制定奧德賽計劃，規劃未來藍圖")
+                        CommonViews.TipRow(number: "4", text: "定期檢視進度，適時調整方向")
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(radius: 1)
+    }
 }
 
 struct QuickActionButton: View {
@@ -182,5 +260,48 @@ struct QuickActionButton: View {
         .background(Color(.systemBackground))
         .cornerRadius(10)
         .shadow(radius: 1)
+    }
+}
+
+struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.blue)
+                .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct TipRow: View {
+    let number: String
+    let text: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(number)
+                .font(.subheadline)
+                .foregroundColor(.white)
+                .frame(width: 24, height: 24)
+                .background(Circle().fill(Color.blue))
+            
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
     }
 } 
