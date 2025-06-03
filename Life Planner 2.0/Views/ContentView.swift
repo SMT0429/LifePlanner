@@ -60,7 +60,7 @@ struct HomeView: View {
                 }
                 .padding()
             }
-            .navigationTitle("生命規劃")
+            .navigationTitle("LifePlanner")
             .sheet(isPresented: $showingDailyTimeSheet) {
                 NavigationView {
                     DailyTimeView()
@@ -77,7 +77,7 @@ struct HomeView: View {
     private var welcomeSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let profile = dataManager.userProfile {
-                Text("你好，\(profile.name)")
+                Text("歡迎來到首頁\(profile.name)")
                     .font(.title)
                     .bold()
                 
@@ -107,36 +107,51 @@ struct HomeView: View {
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 16) {
-                QuickActionButton(
-                    title: "生命之輪",
-                    icon: "circle.grid.cross.fill",
-                    color: .blue
-                ) {
-                    // 導航到生命之輪
+                NavigationLink(destination: LifeWheelView()) {
+                    QuickActionButton(
+                        title: "生命之輪",
+                        icon: "circle.grid.cross.fill",
+                        color: .blue,
+                        action: {}
+                    )
                 }
                 
-                QuickActionButton(
-                    title: "價值觀",
-                    icon: "heart.fill",
-                    color: .red
-                ) {
-                    // 導航到價值觀
+                NavigationLink(destination: CoreValuesView()) {
+                    QuickActionButton(
+                        title: "價值觀",
+                        icon: "heart.fill",
+                        color: .red,
+                        action: {}
+                    )
                 }
                 
-                QuickActionButton(
-                    title: "壽命計算",
-                    icon: "clock.fill",
-                    color: .green
-                ) {
-                    // 導航到壽命計算
+                NavigationLink(destination: LifeCalculatorView()) {
+                    QuickActionButton(
+                        title: "壽命計算",
+                        icon: "clock.fill",
+                        color: .green,
+                        action: {}
+                    )
                 }
                 
-                QuickActionButton(
-                    title: "設定",
-                    icon: "gear",
-                    color: .gray
-                ) {
+                NavigationLink(destination: OdysseyPlanView()) {
+                    QuickActionButton(
+                        title: "奧德賽計劃",
+                        icon: "map.fill",
+                        color: .purple,
+                        action: {}
+                    )
+                }
+                
+                Button {
                     showingLifespanSheet = true
+                } label: {
+                    QuickActionButton(
+                        title: "設定",
+                        icon: "gear",
+                        color: .gray,
+                        action: {}
+                    )
                 }
             }
         }
@@ -154,20 +169,18 @@ struct QuickActionButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(color)
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(.primary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color(.systemBackground))
-            .cornerRadius(10)
-            .shadow(radius: 1)
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(color)
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.primary)
         }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(radius: 1)
     }
 } 
